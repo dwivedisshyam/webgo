@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/dwivedisshyam/webgo/pkg/errors"
 	"github.com/dwivedisshyam/webgo/pkg/webgo/types"
 )
 
@@ -30,17 +31,27 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getError(err error) *types.Error {
-	if e, ok := err.(*types.Error); ok {
-		if e.StatusCode == 0 {
-			e.StatusCode = http.StatusInternalServerError
-		}
+	e := &types.Error{}
 
-		return e
+	switch er := err.(type) {
+	case *errors.EntityNotFound:
+		e.StatusCode = http.StatusNotFound
+
+	case *errors.EntityAlreadyExists:
+		e.StatusCode = http.StatusConflict
+
+	case *types.Error:
+		e.StatusCode = er.StatusCode
+		e.Reason = er.Reason
+
+	case *errors.InvalidParam, *errors.MissingParam:
+		e.StatusCode = http.StatusBadRequest
 	}
 
-	e := &types.Error{
-		StatusCode: http.StatusInternalServerError,
-		Reason:     err.Error(),
+	e.Reason = err.Error()
+
+	if e.StatusCode == 0 {
+		e.StatusCode = http.StatusInternalServerError
 	}
 
 	return e
@@ -63,5 +74,4 @@ func getResponse(data interface{}) *types.Response {
 	}
 
 	return res
-
 }
