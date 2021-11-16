@@ -34,17 +34,17 @@ func getError(err error) *types.Error {
 	e := &types.Error{}
 
 	switch er := err.(type) {
-	case *errors.EntityNotFound:
+	case *errors.EntityNotFound, errors.EntityNotFound:
 		e.StatusCode = http.StatusNotFound
 
-	case *errors.EntityAlreadyExists:
+	case *errors.EntityAlreadyExists, errors.EntityAlreadyExists:
 		e.StatusCode = http.StatusConflict
 
 	case *types.Error:
 		e.StatusCode = er.StatusCode
 		e.Reason = er.Reason
 
-	case *errors.InvalidParam, *errors.MissingParam:
+	case *errors.InvalidParam, *errors.MissingParam, errors.InvalidParam, errors.MissingParam:
 		e.StatusCode = http.StatusBadRequest
 	}
 
